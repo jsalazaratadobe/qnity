@@ -39,9 +39,9 @@
   --tab-background-color: rgba(0, 0, 0, 0.02);
   /* brand-scoped header/footer variables with sensible defaults */
   --nav-background-color: var(--brand-nav-background-color, #0000008c);
-  --nav-text-color: var(--brand-nav-text-color, #ffffff);
+  --nav-text-color: var(--brand-nav-text-color, #131313);
   --footer-background-color: var(--brand-footer-background-color, #000);
-  --footer-text-color: var(--brand-footer-text-color, #ffffff);
+  --footer-text-color: var(--brand-footer-text-color, #131313);
   
   /* fonts */
   --body-font-family: 'Adobe Clean', roboto, roboto-fallback, sans-serif;
