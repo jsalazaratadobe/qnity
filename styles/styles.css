@@ -368,7 +368,7 @@ body.blue-theme footer {
 body.green-theme header .nav-wrapper,
 body.green-theme footer {
   background-color: var(--main-accent-color);
-  color: var(--text-light);
+  color: var(--text-color);
 }
 
 body.red-theme header .nav-wrapper nav .nav-sections ul > li > a::before{
