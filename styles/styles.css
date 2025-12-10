@@ -915,7 +915,7 @@ table {
   padding: 12px 24px !important;
   margin: 10px 5px;
   background-color: var(--main-accent-color) !important;
-  color: var(--text-light) !important;
+  color: var(--text-color) !important;
   text-decoration: none;
   border: 2px solid var(--main-accent-color) !important;
   border-radius: 4px;
