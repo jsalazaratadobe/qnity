@@ -92,31 +92,52 @@
       }
     ]
   },
+ 
   {
-  "id": "contact-form-block",
-  "fields": [
-    {
-      "component": "richtext",
-      "name": "formContent_text",
-      "label": "Intro text",
-      "valueType": "string",
-      "required": true
-    },
-    {
-      "component": "text",
-      "name": "formContent_submitText",
-      "label": "Submit button label",
-      "valueType": "string",
-      "required": true
-    },
-    {
-      "component": "richtext",
-      "name": "formContent_successText",
-      "label": "Success message",
-      "valueType": "string"
-    }
-  ]
-},
+    "id": "contact-form-block",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "title",
+        "label": "Title",
+        "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "description",
+        "label": "Headline Message",
+        "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "endpoint",
+        "label": "Submit Endpoint (Optional)"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "submitText",
+        "label": "Submit Button Label",
+        "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "successText",
+        "label": "Success Message",
+        "required": true
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "privacyText",
+        "label": "Privacy / Helper Text"
+      }
+    ]
+  },
   {
     "id": "image",
     "fields": [
