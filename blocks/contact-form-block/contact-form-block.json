@@ -1,0 +1,9 @@
+{
+  "name": "contact-form-block",
+  "title": "Contact Form Block",
+  "description": "A contact form with validation and fake submit",
+  "category": "common",
+  "editorScript": "contact-form-block.js",
+  "style": "contact-form-block.css",
+  "html": "contact-form-block.html"
+}
