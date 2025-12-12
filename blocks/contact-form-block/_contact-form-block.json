@@ -11,11 +11,11 @@
               "name": "Contact Form",
               "model": "contact-form-block",
               "key-value": true,
-              "title": "Contact us",
-              "description": "Send us a message and we’ll get back to you.",
+              "title": "Lorem Ipsum",
+              "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
               "endpoint": "",
               "submitText": "Send message",
-              "successText": "Thanks! Your message was sent.",
+              "successText": "Thank You, Someone Will Contact You Shortly.",
               "privacyText": "By submitting, you agree to our privacy policy."
             }
           }
