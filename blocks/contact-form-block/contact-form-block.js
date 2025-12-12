@@ -1,153 +1,159 @@
-function findGroupedContainer(block, groupPrefix) {
-  // Universal Editor + model grouping results in fields rendered within the block,
-  // with grouping typically producing a "content" div that holds the grouped nodes.
-  // We’ll just locate the first element that contains any of the expected nodes.
-  const candidates = [...block.querySelectorAll(':scope > div, :scope > div > div')];
-  return candidates.find((el) => el.textContent && el.querySelector(`[data-name^="${groupPrefix}"]`))
-    || block;
+import { readBlockConfig } from '../../scripts/aem.js';
+
+function SetStatus(StatusEl, Message, Type) {
+  StatusEl.classList.remove('Is-Error', 'Is-Success');
+  StatusEl.textContent = '';
+  if (!Message) return;
+  StatusEl.textContent = Message;
+  StatusEl.classList.add(Type === 'Error' ? 'Is-Error' : 'Is-Success');
 }
 
-function getFieldValue(block, fieldName) {
-  // In practice, UE-rendered HTML may not always include data-name attributes
-  // depending on your setup. So we support two strategies:
-  //  1) Prefer elements with data-name="{fieldName}"
-  //  2) Fallback: look for a wrapper whose first child is the authored value for that field
-  const byDataName = block.querySelector(`[data-name="${fieldName}"]`);
-  if (byDataName) return byDataName;
+function IsValidUSPhone(Raw) {
+  const Value = (Raw || '').trim();
+  if (!Value) return false;
+  if (/[a-z]/i.test(Value)) return false;
 
-  // Fallback heuristic: find any element that looks like it contains the authored field
-  // (common output is simple div wrappers)
-  const all = [...block.querySelectorAll('div, p, h1, h2, h3, a')];
-  const match = all.find((el) => el.getAttribute && el.getAttribute('data-aue-prop') === fieldName);
-  if (match) return match;
+  // Accept: 6025550123, 602-555-0123, (602) 555-0123, +1 602 555 0123, 1-602-555-0123
+  const Regex = /^(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?)\d{3}[\s\-\.]?\d{4}$/;
+  if (!Regex.test(Value)) return false;
 
-  return null;
+  // Digit Count Sanity Check (10 digits, or 11 starting with 1)
+  const Digits = Value.replace(/\D/g, '');
+  if (Digits.length === 10) return true;
+  if (Digits.length === 11 && Digits.startsWith('1')) return true;
+  return false;
 }
 
-function asText(el, fallback = '') {
-  if (!el) return fallback;
-  return (el.textContent || '').trim() || fallback;
+function NormalizeUSPhone(Raw) {
+  const Digits = (Raw || '').replace(/\D/g, '');
+  if (Digits.length === 10) return `+1${Digits}`;
+  if (Digits.length === 11 && Digits.startsWith('1')) return `+${Digits}`;
+  return Digits;
 }
 
-function asHTML(el, fallback = '') {
-  if (!el) return fallback;
-  return el.innerHTML?.trim() || fallback;
-}
+export default function decorate(Block) {
+  const Config = readBlockConfig(Block);
 
-export default function decorate(block) {
-  // Read authored content from the existing semantic HTML
-  const introEl = getFieldValue(block, 'formContent_text') || block.querySelector(':scope h1, :scope h2, :scope h3, :scope p');
-  const endpointEl = getFieldValue(block, 'formContent_endpoint');
-  const submitTextEl = getFieldValue(block, 'formContent_submitText');
-  const successEl = getFieldValue(block, 'formContent_successText');
-  const privacyEl = getFieldValue(block, 'formContent_privacyText');
+  const Title = (Config.title || 'Lorem Ipsum').trim();
+  const Description = (Config.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.').trim();
+  const SuccessText = (Config.successtext || 'Thank You, Someone Will Contact You Shortly.').trim();
+  const SubmitLabel = (Config.submittext || 'Submit').trim();
 
-  const endpoint = asText(endpointEl, '').trim();
-  const submitText = asText(submitTextEl, 'Send');
-  const successHTML = asHTML(successEl, '<p>Thanks! Your message was sent.</p>');
-  const introHTML = introEl ? (introEl.closest('div') ? introEl.closest('div').innerHTML : introEl.outerHTML) : '<h2>Contact us</h2>';
+  const Wrapper = document.createElement('div');
+  Wrapper.className = 'contact-form-block__inner';
 
-  // Build the final UI
-  const wrapper = document.createElement('div');
-  wrapper.className = 'contact-form-block__inner';
+  const Intro = document.createElement('div');
+  Intro.className = 'contact-form-block__intro';
+  Intro.innerHTML = `
+    <h2>${Title}</h2>
+    <p>${Description}</p>
+  `;
 
-  const intro = document.createElement('div');
-  intro.className = 'contact-form-block__intro';
-  intro.innerHTML = introHTML;
+  const Form = document.createElement('form');
+  Form.className = 'contact-form-block__form';
+  Form.noValidate = true;
 
-  const form = document.createElement('form');
-  form.className = 'contact-form-block__form';
-  form.noValidate = true;
+  const Fields = document.createElement('div');
+  Fields.className = 'contact-form-block__fields';
 
-  const fields = document.createElement('div');
-  fields.className = 'contact-form-block__fields';
-
-  fields.innerHTML = `
+  Fields.innerHTML = `
     <label class="contact-form-block__field">
-      <span class="contact-form-block__label">Name</span>
-      <input name="name" type="text" autocomplete="name" required />
+      <span class="contact-form-block__label">Salutation</span>
+      <select name="salutation" required>
+        <option value="" selected disabled>Select…</option>
+        <option>Mr.</option>
+        <option>Ms.</option>
+        <option>Mrs.</option>
+        <option>Mx.</option>
+        <option>Dr.</option>
+      </select>
     </label>
+
     <label class="contact-form-block__field">
-      <span class="contact-form-block__label">Email</span>
+      <span class="contact-form-block__label">First Name</span>
+      <input name="firstName" type="text" autocomplete="given-name" required />
+    </label>
+
+    <label class="contact-form-block__field">
+      <span class="contact-form-block__label">Last Name</span>
+      <input name="lastName" type="text" autocomplete="family-name" required />
+    </label>
+
+    <label class="contact-form-block__field">
+      <span class="contact-form-block__label">Email Address</span>
       <input name="email" type="email" autocomplete="email" required />
     </label>
-    <label class="contact-form-block__field contact-form-block__field--message">
-      <span class="contact-form-block__label">Message</span>
-      <textarea name="message" rows="6" required></textarea>
+
+    <label class="contact-form-block__field">
+      <span class="contact-form-block__label">Phone Number</span>
+      <input
+        name="phone"
+        type="tel"
+        autocomplete="tel"
+        required
+        inputmode="tel"
+        placeholder="(602) 555-0123"
+        aria-describedby="contact-form-block-phone-hint"
+        pattern="^(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?)\d{3}[\s\-\.]?\d{4}$"
+      />
+      <span id="contact-form-block-phone-hint" class="contact-form-block__hint">
+        Enter A Valid US Phone Number (10 Digits). Examples: (602) 555-0123, 602-555-0123, +1 602 555 0123
+      </span>
     </label>
   `;
 
-  const actions = document.createElement('div');
-  actions.className = 'contact-form-block__actions';
+  const Actions = document.createElement('div');
+  Actions.className = 'contact-form-block__actions';
 
-  const button = document.createElement('button');
-  button.type = 'submit';
-  button.className = 'contact-form-block__submit';
-  button.textContent = submitText;
+  const Button = document.createElement('button');
+  Button.type = 'submit';
+  Button.className = 'contact-form-block__submit';
+  Button.textContent = SubmitLabel;
 
-  const status = document.createElement('div');
-  status.className = 'contact-form-block__status';
-  status.setAttribute('aria-live', 'polite');
+  const Status = document.createElement('div');
+  Status.className = 'contact-form-block__status';
+  Status.setAttribute('aria-live', 'polite');
 
-  actions.append(button, status);
+  Actions.append(Button, Status);
+  Form.append(Fields, Actions);
 
-  const privacy = document.createElement('div');
-  privacy.className = 'contact-form-block__privacy';
-  privacy.innerHTML = privacyEl ? privacyEl.innerHTML : '';
+  // Clear Phone Custom Validity As The User Types
+  Form.elements.phone.addEventListener('input', () => {
+    Form.elements.phone.setCustomValidity('');
+    SetStatus(Status, '', null);
+  });
 
-  form.append(fields, actions, privacy);
+  Form.addEventListener('submit', (Event) => {
+    Event.preventDefault();
+    SetStatus(Status, '', null);
 
-  // Submit behavior
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    status.textContent = '';
-    status.classList.remove('is-error', 'is-success');
-
-    if (!form.checkValidity()) {
-      status.textContent = 'Please complete all required fields.';
-      status.classList.add('is-error');
-      form.reportValidity();
+    // Native Validation (Required + Email Syntax + Phone Pattern)
+    if (!Form.checkValidity()) {
+      SetStatus(Status, 'Please Complete All Required Fields.', 'Error');
+      Form.reportValidity();
       return;
     }
 
-    const payload = {
-      name: form.elements.name.value.trim(),
-      email: form.elements.email.value.trim(),
-      message: form.elements.message.value.trim(),
-      source: window.location.href,
-    };
+    // Strong Phone Validation
+    const PhoneEl = Form.elements.phone;
+    const PhoneRaw = PhoneEl.value.trim();
 
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-
-    try {
-      if (endpoint) {
-        const resp = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!resp.ok) throw new Error(`Request failed (${resp.status})`);
-      }
-
-      form.reset();
-      status.innerHTML = successHTML;
-      status.classList.add('is-success');
-    } catch (err) {
-      status.textContent = 'Sorry — something went wrong. Please try again.';
-      status.classList.add('is-error');
-      // eslint-disable-next-line no-console
-      console.error('contact-form-block submit error', err);
-    } finally {
-      button.disabled = false;
-      button.removeAttribute('aria-busy');
+    if (!IsValidUSPhone(PhoneRaw)) {
+      PhoneEl.setCustomValidity('Please Enter A Valid US Phone Number.');
+      SetStatus(Status, 'Please Enter A Valid Phone Number.', 'Error');
+      Form.reportValidity();
+      return;
     }
+
+    PhoneEl.setCustomValidity('');
+    PhoneEl.value = NormalizeUSPhone(PhoneRaw);
+
+    Form.reset();
+    SetStatus(Status, SuccessText, 'Success');
   });
 
-  wrapper.append(intro, form);
+  Wrapper.append(Intro, Form);
 
-  // Replace authored output with decorated output
-  block.textContent = '';
-  block.append(wrapper);
+  Block.textContent = '';
+  Block.append(Wrapper);
 }
