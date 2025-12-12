@@ -1,42 +1,86 @@
 .contact-form-block {
-    max-width: 400px;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 32px 0;
 }
 
-.contact-form label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
+.contact-form-block__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-.contact-form input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.contact-form-block__intro :is(h1, h2, h3) {
+  margin: 0 0 8px;
 }
 
-.contact-form button {
-    width: 100%;
-    margin-top: 15px;
-    padding: 10px;
-    background: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.contact-form-block__intro p {
+  margin: 0 0 16px;
 }
 
-.contact-form button:hover {
-    background: #0056b3;
+.contact-form-block__form {
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 12px;
+  padding: 16px;
 }
 
-.error-message {
-    color: red;
-    margin-top: 10px;
+.contact-form-block__fields {
+  display: grid;
+  gap: 12px;
 }
 
+.contact-form-block__field {
+  display: grid;
+  gap: 6px;
+}
+
+.contact-form-block__label {
+  font-size: 12px;
+  letter-spacing: .02em;
+  opacity: .9;
+}
+
+.contact-form-block__field input,
+.contact-form-block__field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,.18);
+  border-radius: 10px;
+  font: inherit;
+}
+
+.contact-form-block__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.contact-form-block__submit {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: transparent;
+  cursor: pointer;
+}
+
+.contact-form-block__submit[disabled] {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.contact-form-block__status {
+  font-size: 14px;
+}
+
+.contact-form-block__status.is-success {
+  opacity: .9;
+}
+
+.contact-form-block__status.is-error {
+  opacity: .9;
+}
+
+.contact-form-block__privacy {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: .8;
+}
