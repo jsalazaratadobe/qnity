@@ -1,24 +1,20 @@
 import { readBlockConfig } from '../../scripts/aem.js';
 
 function SetStatus(StatusEl, Message, Type) {
-  StatusEl.classList.remove('Is-Error', 'Is-Success');
+  StatusEl.classList.remove('is-error', 'is-success');
   StatusEl.textContent = '';
   if (!Message) return;
   StatusEl.textContent = Message;
-  StatusEl.classList.add(Type === 'Error' ? 'Is-Error' : 'Is-Success');
+  StatusEl.classList.add(Type === 'error' ? 'is-error' : 'is-success');
 }
 
 function IsValidUSPhone(Raw) {
-  const Value = (Raw || '').trim();
-  if (!Value) return false;
-  if (/[a-z]/i.test(Value)) return false;
+  if (/[a-z]/i.test(Raw || '')) return false;
 
-  // Accept: 6025550123, 602-555-0123, (602) 555-0123, +1 602 555 0123, 1-602-555-0123
-  const Regex = /^(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?)\d{3}[\s\-\.]?\d{4}$/;
-  if (!Regex.test(Value)) return false;
+  const Re = /^(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?)\d{3}[\s\-\.]?\d{4}$/;
+  if (!Re.test((Raw || '').trim())) return false;
 
-  // Digit Count Sanity Check (10 digits, or 11 starting with 1)
-  const Digits = Value.replace(/\D/g, '');
+  const Digits = (Raw || '').replace(/\D/g, '');
   if (Digits.length === 10) return true;
   if (Digits.length === 11 && Digits.startsWith('1')) return true;
   return false;
@@ -31,13 +27,25 @@ function NormalizeUSPhone(Raw) {
   return Digits;
 }
 
+function GetConfigValue(Config, ...Keys) {
+  for (const Key of Keys) {
+    const Value = Config?.[Key];
+    if (Value !== undefined && Value !== null && String(Value).trim() !== '') return String(Value).trim();
+  }
+  return '';
+}
+
 export default function decorate(Block) {
   const Config = readBlockConfig(Block);
 
-  const Title = (Config.title || 'Lorem Ipsum').trim();
-  const Description = (Config.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.').trim();
-  const SuccessText = (Config.successtext || 'Thank You, Someone Will Contact You Shortly.').trim();
-  const SubmitLabel = (Config.submittext || 'Submit').trim();
+  // Support both camelCase and dashed keys (depends on authored key labels).
+  const Title = GetConfigValue(Config, 'title');
+  const Description = GetConfigValue(Config, 'description', 'headline', 'headline-message', 'headlineMessage');
+  const SubmitText = GetConfigValue(Config, 'submittext', 'submit-text', 'submitText') || 'Submit';
+  const SuccessText = GetConfigValue(Config, 'successtext', 'success-text', 'successText')
+    || 'Thank You, Someone Will Contact You Shortly.';
+  const PrivacyText = GetConfigValue(Config, 'privacytext', 'privacy-text', 'privacyText');
+  const Endpoint = GetConfigValue(Config, 'endpoint');
 
   const Wrapper = document.createElement('div');
   Wrapper.className = 'contact-form-block__inner';
@@ -45,8 +53,8 @@ export default function decorate(Block) {
   const Intro = document.createElement('div');
   Intro.className = 'contact-form-block__intro';
   Intro.innerHTML = `
-    <h2>${Title}</h2>
-    <p>${Description}</p>
+    <h2 class="contact-form-block__editable" contenteditable="true" spellcheck="true">${Title || 'Lorem Ipsum'}</h2>
+    <p class="contact-form-block__editable" contenteditable="true" spellcheck="true">${Description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}</p>
   `;
 
   const Form = document.createElement('form');
@@ -55,7 +63,6 @@ export default function decorate(Block) {
 
   const Fields = document.createElement('div');
   Fields.className = 'contact-form-block__fields';
-
   Fields.innerHTML = `
     <label class="contact-form-block__field">
       <span class="contact-form-block__label">Salutation</span>
@@ -93,10 +100,10 @@ export default function decorate(Block) {
         required
         inputmode="tel"
         placeholder="(602) 555-0123"
-        aria-describedby="contact-form-block-phone-hint"
+        aria-describedby="phone-hint"
         pattern="^(\+?1[\s\-\.]?)?(\(?\d{3}\)?[\s\-\.]?)\d{3}[\s\-\.]?\d{4}$"
       />
-      <span id="contact-form-block-phone-hint" class="contact-form-block__hint">
+      <span id="phone-hint" class="contact-form-block__hint">
         Enter A Valid US Phone Number (10 Digits). Examples: (602) 555-0123, 602-555-0123, +1 602 555 0123
       </span>
     </label>
@@ -108,7 +115,7 @@ export default function decorate(Block) {
   const Button = document.createElement('button');
   Button.type = 'submit';
   Button.className = 'contact-form-block__submit';
-  Button.textContent = SubmitLabel;
+  Button.textContent = SubmitText;
 
   const Status = document.createElement('div');
   Status.className = 'contact-form-block__status';
@@ -117,30 +124,36 @@ export default function decorate(Block) {
   Actions.append(Button, Status);
   Form.append(Fields, Actions);
 
-  // Clear Phone Custom Validity As The User Types
-  Form.elements.phone.addEventListener('input', () => {
-    Form.elements.phone.setCustomValidity('');
+  if (PrivacyText) {
+    const Privacy = document.createElement('div');
+    Privacy.className = 'contact-form-block__privacy';
+    Privacy.textContent = PrivacyText;
+    Form.append(Privacy);
+  }
+
+  // Clear custom errors as user edits.
+  const PhoneEl = Form.elements.phone;
+  PhoneEl.addEventListener('input', () => {
+    PhoneEl.setCustomValidity('');
     SetStatus(Status, '', null);
   });
 
-  Form.addEventListener('submit', (Event) => {
+  Form.addEventListener('submit', async (Event) => {
     Event.preventDefault();
     SetStatus(Status, '', null);
 
-    // Native Validation (Required + Email Syntax + Phone Pattern)
+    // Native validation (required + email syntax + phone pattern)
     if (!Form.checkValidity()) {
-      SetStatus(Status, 'Please Complete All Required Fields.', 'Error');
+      SetStatus(Status, 'Please Complete All Required Fields.', 'error');
       Form.reportValidity();
       return;
     }
 
-    // Strong Phone Validation
-    const PhoneEl = Form.elements.phone;
+    // Strong phone validation (beyond pattern)
     const PhoneRaw = PhoneEl.value.trim();
-
     if (!IsValidUSPhone(PhoneRaw)) {
       PhoneEl.setCustomValidity('Please Enter A Valid US Phone Number.');
-      SetStatus(Status, 'Please Enter A Valid Phone Number.', 'Error');
+      SetStatus(Status, 'Please Enter A Valid Phone Number.', 'error');
       Form.reportValidity();
       return;
     }
@@ -148,8 +161,43 @@ export default function decorate(Block) {
     PhoneEl.setCustomValidity('');
     PhoneEl.value = NormalizeUSPhone(PhoneRaw);
 
+    // Optional: Submit to endpoint if configured.
+    if (Endpoint) {
+      try {
+        Button.disabled = true;
+        Button.setAttribute('aria-busy', 'true');
+
+        const Payload = {
+          salutation: Form.elements.salutation.value,
+          firstName: Form.elements.firstName.value.trim(),
+          lastName: Form.elements.lastName.value.trim(),
+          email: Form.elements.email.value.trim(),
+          phone: PhoneEl.value,
+          source: window.location.href,
+        };
+
+        const Response = await fetch(Endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Payload),
+        });
+
+        if (!Response.ok) throw new Error(`Request failed (${Response.status})`);
+      } catch (Err) {
+        // eslint-disable-next-line no-console
+        console.error('contact-form-block submit error', Err);
+        SetStatus(Status, 'Sorry, Something Went Wrong. Please Try Again.', 'error');
+        Button.disabled = false;
+        Button.removeAttribute('aria-busy');
+        return;
+      } finally {
+        Button.disabled = false;
+        Button.removeAttribute('aria-busy');
+      }
+    }
+
     Form.reset();
-    SetStatus(Status, SuccessText, 'Success');
+    SetStatus(Status, SuccessText, 'success');
   });
 
   Wrapper.append(Intro, Form);
