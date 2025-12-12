@@ -17,7 +17,7 @@
 }
 
 .contact-form-block__form {
-  border: 1px solid rgba(0,0,0,.12);
+  border: 1px solid rgba(0, 0, 0, .12);
   border-radius: 12px;
   padding: 16px;
 }
@@ -39,12 +39,20 @@
 }
 
 .contact-form-block__field input,
-.contact-form-block__field textarea {
+.contact-form-block__field textarea,
+.contact-form-block__field select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(0,0,0,.18);
+  border: 1px solid rgba(0, 0, 0, .18);
   border-radius: 10px;
   font: inherit;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.contact-form-block__hint {
+  font-size: 12px;
+  opacity: .75;
 }
 
 .contact-form-block__actions {
@@ -57,7 +65,7 @@
 .contact-form-block__submit {
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(0,0,0,.18);
+  border: 1px solid rgba(0, 0, 0, .18);
   background: transparent;
   cursor: pointer;
 }
@@ -71,16 +79,14 @@
   font-size: 14px;
 }
 
-.contact-form-block__status.is-success {
+.contact-form-block__status.Is-Success {
   opacity: .9;
 }
 
-.contact-form-block__status.is-error {
+.contact-form-block__status.Is-Error {
   opacity: .9;
 }
 
-.contact-form-block__privacy {
-  margin-top: 10px;
-  font-size: 12px;
-  opacity: .8;
+.contact-form-block__field :is(input, select, textarea):invalid {
+  border-color: rgba(200, 0, 0, .45);
 }
