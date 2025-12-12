@@ -71,8 +71,7 @@
             "regExp": "^\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$",
             "customErrorMsg": "Incorrect. Please check again."
           }
-      ]
-    }
+        }
   ],
   "filters": []
 }
