@@ -203,7 +203,7 @@
           }
         },
 				{
-          {"title": "Contact Form Block",
+					"title": "Contact Form Block",
 					"id": "contact-form-block",
 					"plugins": {
 						"xwalk": {
